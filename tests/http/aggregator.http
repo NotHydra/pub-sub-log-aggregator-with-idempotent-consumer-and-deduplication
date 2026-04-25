@@ -1,0 +1,254 @@
+# Aggregator Service — http://localhost:8080
+# Endpoints: POST /publish, GET /events, GET /stats
+# Run with: httpyac aggregator.http --all --env local
+
+###
+# @name publish_single_event
+# Publish satu event ke topic logs.auth
+POST {{aggregator_url}}/publish
+Content-Type: application/json
+
+{
+    "events": [
+        {
+            "topic": "logs.auth",
+            "event_id": "evt-001",
+            "timestamp": "2024-01-01T00:00:00Z",
+            "source": "auth-service",
+            "payload": { "user_id": "u1", "action": "login" }
+        }
+    ]
+}
+
+{{
+    const assert = require("assert");
+
+    test("status is 202 Accepted", () => {
+        assert.equal(response.statusCode, 202);
+    });
+
+    test("queued count is 1", () => {
+        assert.equal(response.parsedBody.queued, 1);
+    });
+}}
+
+###
+# @name publish_batch_events
+# Publish batch 3 event sekaligus ke beberapa topic
+POST {{aggregator_url}}/publish
+Content-Type: application/json
+
+{
+    "events": [
+        {
+            "topic": "logs.payment",
+            "event_id": "pay-001",
+            "timestamp": "2024-01-01T00:01:00Z",
+            "source": "payment-service",
+            "payload": { "order_id": "ord-1", "amount": 150000 }
+        },
+        {
+            "topic": "logs.order",
+            "event_id": "ord-001",
+            "timestamp": "2024-01-01T00:02:00Z",
+            "source": "order-service",
+            "payload": { "order_id": "ord-1", "status": "created" }
+        },
+        {
+            "topic": "logs.inventory",
+            "event_id": "inv-001",
+            "timestamp": "2024-01-01T00:03:00Z",
+            "source": "inventory-service",
+            "payload": { "sku": "SKU-42", "qty_delta": -1 }
+        }
+    ]
+}
+
+{{
+    const assert = require("assert");
+
+    test("status is 202 Accepted", () => {
+        assert.equal(response.statusCode, 202);
+    });
+
+    test("queued count is 3", () => {
+        assert.equal(response.parsedBody.queued, 3);
+    });
+}}
+
+###
+# @name publish_duplicate_event
+# Kirim event yang sama (evt-001) ulang — harus di-drop oleh consumer
+POST {{aggregator_url}}/publish
+Content-Type: application/json
+
+{
+    "events": [
+        {
+            "topic": "logs.auth",
+            "event_id": "evt-001",
+            "timestamp": "2024-01-01T00:00:00Z",
+            "source": "auth-service",
+            "payload": { "user_id": "u1", "action": "login" }
+        }
+    ]
+}
+
+{{
+    const assert = require("assert");
+
+    test("status is 202 Accepted", () => {
+        assert.equal(response.statusCode, 202);
+    });
+
+    test("queued count is 1 (diterima queue, bukan berarti unique)", () => {
+        assert.equal(response.parsedBody.queued, 1);
+    });
+}}
+
+###
+# @name publish_invalid_missing_field
+# Validasi schema: event_id tidak ada → harus 422
+POST {{aggregator_url}}/publish
+Content-Type: application/json
+
+{
+    "events": [
+        {
+            "topic": "logs.auth",
+            "timestamp": "2024-01-01T00:00:00Z",
+            "source": "auth-service",
+            "payload": {}
+        }
+    ]
+}
+
+{{
+    const assert = require("assert");
+
+    test("status is 422 Unprocessable Entity", () => {
+        assert.equal(response.statusCode, 422);
+    });
+
+    test("body contains detail field", () => {
+        assert.ok(Array.isArray(response.parsedBody.detail));
+    });
+}}
+
+###
+# @name publish_invalid_timestamp
+# Validasi schema: timestamp bukan ISO8601 → harus 422
+POST {{aggregator_url}}/publish
+Content-Type: application/json
+
+{
+    "events": [
+        {
+            "topic": "logs.auth",
+            "event_id": "evt-bad-ts",
+            "timestamp": "bukan-tanggal",
+            "source": "auth-service",
+            "payload": {}
+        }
+    ]
+}
+
+{{
+    const assert = require("assert");
+
+    test("status is 422 Unprocessable Entity", () => {
+        assert.equal(response.statusCode, 422);
+    });
+
+    test("body contains detail field", () => {
+        assert.ok(Array.isArray(response.parsedBody.detail));
+    });
+}}
+
+###
+# @name get_events_by_topic
+# Ambil semua event yang sudah diproses untuk topic logs.auth
+GET {{aggregator_url}}/events?topic=logs.auth
+
+{{
+    const assert = require("assert");
+
+    test("status is 200 OK", () => {
+        assert.equal(response.statusCode, 200);
+    });
+
+    test("topic matches requested topic", () => {
+        assert.equal(response.parsedBody.topic, "logs.auth");
+    });
+
+    test("count is a non-negative number", () => {
+        assert.ok(response.parsedBody.count >= 0);
+    });
+
+    test("events is an array", () => {
+        assert.ok(Array.isArray(response.parsedBody.events));
+    });
+}}
+
+###
+# @name get_events_unknown_topic
+# Topic yang belum punya event → count harus 0
+GET {{aggregator_url}}/events?topic=logs.unknown
+
+{{
+    const assert = require("assert");
+
+    test("status is 200 OK", () => {
+        assert.equal(response.statusCode, 200);
+    });
+
+    test("topic matches requested topic", () => {
+        assert.equal(response.parsedBody.topic, "logs.unknown");
+    });
+
+    test("count is 0 for unknown topic", () => {
+        assert.equal(response.parsedBody.count, 0);
+    });
+
+    test("events is empty array", () => {
+        assert.deepEqual(response.parsedBody.events, []);
+    });
+}}
+
+###
+# @name get_stats
+# Cek statistik aggregator: received, unique_processed, duplicate_dropped
+GET {{aggregator_url}}/stats
+
+{{
+    const assert = require("assert");
+
+    test("status is 200 OK", () => {
+        assert.equal(response.statusCode, 200);
+    });
+    
+    test("received is a non-negative number", () => {
+        assert.ok(response.parsedBody.received >= 0);
+    });
+
+    test("unique_processed is a non-negative number", () => {
+        assert.ok(response.parsedBody.unique_processed >= 0);
+    });
+
+    test("duplicate_dropped is a non-negative number", () => {
+        assert.ok(response.parsedBody.duplicate_dropped >= 0);
+    });
+
+    test("received equals unique_processed plus duplicate_dropped", () => {
+        const { received, unique_processed, duplicate_dropped } = response.parsedBody;
+        assert.equal(received, unique_processed + duplicate_dropped);
+    });
+
+    test("topics is an array", () => {
+        assert.ok(Array.isArray(response.parsedBody.topics));
+    });
+
+    test("uptime_seconds is positive", () => {
+        assert.ok(response.parsedBody.uptime_seconds > 0);
+    });
+}}

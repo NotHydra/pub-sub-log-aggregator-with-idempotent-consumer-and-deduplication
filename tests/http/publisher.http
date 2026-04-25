@@ -1,0 +1,65 @@
+# Publisher Service — http://localhost:8081
+# Endpoints: GET /status, POST /run
+# Run with: httpyac publisher.http --all --env local
+
+###
+# @name get_publisher_status
+# Cek konfigurasi publisher: aggregator URL, event count, duplicate rate
+GET {{publisher_url}}/status
+
+{{
+    const assert = require("assert");
+
+    test("status is 200 OK", () => {
+        assert.equal(response.statusCode, 200);
+    });
+
+    test("aggregator_url is not empty", () => {
+        assert.ok(response.parsedBody.aggregator_url.length > 0);
+    });
+
+    test("event_count is positive", () => {
+        assert.ok(response.parsedBody.event_count > 0);
+    });
+
+    test("duplicate_rate is between 0 and 1", () => {
+        const rate = response.parsedBody.duplicate_rate;
+        assert.ok(rate > 0 && rate < 1);
+    });
+}}
+
+###
+# @name run_publisher
+# Trigger generate + send events ke aggregator
+# 6000 events dengan 25% duplikat (configurable via env)
+# Catatan: request ini bisa memakan waktu beberapa detik
+POST {{publisher_url}}/run
+
+{{
+    const assert = require("assert");
+
+    test("status is 202 Accepted", () => {
+        assert.equal(response.statusCode, 202);
+    });
+
+    test("total_events is positive", () => {
+        assert.ok(response.parsedBody.total_events > 0);
+    });
+
+    test("unique_events is positive", () => {
+        assert.ok(response.parsedBody.unique_events > 0);
+    });
+
+    test("duplicate_events is positive", () => {
+        assert.ok(response.parsedBody.duplicate_events > 0);
+    });
+
+    test("sent is positive", () => {
+        assert.ok(response.parsedBody.sent > 0);
+    });
+    
+    test("total_events equals unique plus duplicate", () => {
+        const { total_events, unique_events, duplicate_events } = response.parsedBody;
+        assert.equal(total_events, unique_events + duplicate_events);
+    });
+}}
