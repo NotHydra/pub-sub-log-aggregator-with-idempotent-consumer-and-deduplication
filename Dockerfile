@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+ARG SERVICE=aggregator
+
 WORKDIR /app
 
 RUN adduser --disabled-password --gecos '' appuser \
@@ -11,8 +13,6 @@ USER appuser
 COPY --chown=appuser:appuser requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY --chown=appuser:appuser src/ ./src/
-
-EXPOSE 8080
+COPY --chown=appuser:appuser src/${SERVICE}/ ./src/
 
 CMD ["python", "-m", "src.main"]

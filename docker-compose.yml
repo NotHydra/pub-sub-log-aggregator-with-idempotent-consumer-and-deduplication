@@ -2,7 +2,10 @@ name: pub-sub-log-aggregator-with-idempotent-consumer-and-deduplication
 
 services:
   aggregator:
-    build: ./aggregator
+    build:
+      context: .
+      args:
+        SERVICE: aggregator
     container_name: aggregator
     ports:
       - "8080:8080"
@@ -19,7 +22,10 @@ services:
     restart: unless-stopped
 
   publisher:
-    build: ./publisher
+    build:
+      context: .
+      args:
+        SERVICE: publisher
     container_name: publisher
     ports:
       - "8081:8081"
