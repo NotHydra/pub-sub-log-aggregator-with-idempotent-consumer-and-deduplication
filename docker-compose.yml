@@ -10,7 +10,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - aggregator-data:/app/data
+      - ./data:/app/data
     networks:
       - pubsub-net
     healthcheck:
@@ -44,6 +44,3 @@ services:
 networks:
   pubsub-net:
     driver: bridge
-
-volumes:
-  aggregator-data:
