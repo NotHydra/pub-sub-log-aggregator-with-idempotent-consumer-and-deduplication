@@ -36,14 +36,15 @@ Dua service berjalan dalam satu Docker Compose network (`pubsub-net`):
 ### Menjalankan dengan Docker Compose
 
 ```bash
+mkdir -p data && chmod 777 data
 docker compose up --build
 ```
 
 ### Menjalankan hanya aggregator
 
 ```bash
-docker build -t uts-aggregator ./aggregator
-docker run -p 8080:8080 -v $(pwd)/data:/app/data uts-aggregator
+docker build -t uts-aggregator .
+docker run -p 8080:8080 uts-aggregator
 ```
 
 ---
@@ -181,19 +182,18 @@ npm install -g httpyac
 
 ```
 tests/http/
-├── http-client.env.json   # environment variables (local)
-├── aggregator.http        # endpoint aggregator
-└── publisher.http         # endpoint publisher
+├── aggregator.http   # endpoint aggregator
+└── publisher.http    # endpoint publisher
 ```
 
 ### Menjalankan via CLI
 
 ```bash
 # Semua request aggregator
-httpyac tests/http/aggregator.http --all --env local
+httpyac tests/http/aggregator.http --all
 
 # Semua request publisher
-httpyac tests/http/publisher.http --all --env local
+httpyac tests/http/publisher.http --all
 ```
 
 ### Request yang tersedia

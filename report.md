@@ -160,8 +160,8 @@ Event Store")]
         P1 -->|"HTTP POST /publish"| A1
     end
 
-    VOL[("Named Volume
-aggregator-data")]
+    VOL[("Bind Mount
+./data:/app/data")]
     A7 <--> VOL
 ```
 
