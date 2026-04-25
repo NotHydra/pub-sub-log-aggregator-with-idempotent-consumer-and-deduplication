@@ -165,6 +165,61 @@ python -m pytest tests/ -v
 
 ---
 
+## Testing Endpoint dengan httpYac
+
+File httpYac tersedia di `tests/http/` untuk pengujian endpoint secara manual terhadap service yang sedang berjalan.
+
+### Prasyarat
+
+Install ekstensi **httpYac** di VS Code, atau install CLI-nya:
+
+```bash
+npm install -g httpyac
+```
+
+### Struktur file
+
+```
+tests/http/
+├── http-client.env.json   # environment variables (local)
+├── aggregator.http        # endpoint aggregator
+└── publisher.http         # endpoint publisher
+```
+
+### Menjalankan via CLI
+
+```bash
+# Semua request aggregator
+httpyac tests/http/aggregator.http --all --env local
+
+# Semua request publisher
+httpyac tests/http/publisher.http --all --env local
+```
+
+### Request yang tersedia
+
+**aggregator.http:**
+
+| Request | Deskripsi |
+|---------|-----------|
+| `publish_single_event` | Publish 1 event, assert queued=1 |
+| `publish_batch_events` | Publish 3 event sekaligus, assert queued=3 |
+| `publish_duplicate_event` | Kirim ulang event yang sama |
+| `publish_invalid_missing_field` | Field hilang → assert 422 |
+| `publish_invalid_timestamp` | Timestamp invalid → assert 422 |
+| `get_events_by_topic` | GET /events?topic=logs.auth |
+| `get_events_unknown_topic` | Topic kosong → assert count=0 |
+| `get_stats` | Assert received = unique + duplicate |
+
+**publisher.http:**
+
+| Request | Deskripsi |
+|---------|-----------|
+| `get_publisher_status` | Cek konfigurasi publisher |
+| `run_publisher` | Trigger kirim 6000 event ke aggregator |
+
+---
+
 ## Variabel Lingkungan
 
 ### Aggregator
