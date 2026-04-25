@@ -7,10 +7,10 @@ import pytest_asyncio
 
 from httpx import AsyncClient, ASGITransport
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "aggregator"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from src.main import app
-from src.dedup_store import DedupStore
+from aggregator.main import app
+from aggregator.dedup_store import DedupStore
 
 
 @pytest.fixture(scope="session")

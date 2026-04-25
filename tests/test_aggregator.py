@@ -115,7 +115,7 @@ async def test_dedup_persistence(fresh_dedup_store):
     assert await store.is_duplicate("logs.auth", "persist-002") is False
 
     reloaded = __import__(
-        "src.dedup_store", fromlist=["DedupStore"]
+        "aggregator.dedup_store", fromlist=["DedupStore"]
     ).DedupStore(db_path=db_path)
     assert await reloaded.is_duplicate("logs.auth", "persist-001") is True
     assert await reloaded.is_duplicate("logs.auth", "persist-002") is False
