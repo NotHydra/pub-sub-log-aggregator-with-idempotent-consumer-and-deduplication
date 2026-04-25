@@ -1,3 +1,5 @@
+name: pub-sub-log-aggregator-with-idempotent-consumer-and-deduplication
+
 services:
   aggregator:
     build: ./aggregator
@@ -5,7 +7,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./data:/app/data
+      - aggregator-data:/app/data
     networks:
       - pubsub-net
     healthcheck:
@@ -36,3 +38,6 @@ services:
 networks:
   pubsub-net:
     driver: bridge
+
+volumes:
+  aggregator-data:
