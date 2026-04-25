@@ -1,11 +1,11 @@
 # Aggregator Service — http://localhost:8080
 # Endpoints: POST /publish, GET /events, GET /stats
-# Run with: httpyac aggregator.http --all --env local
+# Run with: httpyac aggregator.http --all
 
 ###
 # @name publish_single_event
 # Publish satu event ke topic logs.auth
-POST {{aggregator_url}}/publish
+POST http://localhost:8080/publish
 Content-Type: application/json
 
 {
@@ -35,7 +35,7 @@ Content-Type: application/json
 ###
 # @name publish_batch_events
 # Publish batch 3 event sekaligus ke beberapa topic
-POST {{aggregator_url}}/publish
+POST http://localhost:8080/publish
 Content-Type: application/json
 
 {
@@ -79,7 +79,7 @@ Content-Type: application/json
 ###
 # @name publish_duplicate_event
 # Kirim event yang sama (evt-001) ulang — harus di-drop oleh consumer
-POST {{aggregator_url}}/publish
+POST http://localhost:8080/publish
 Content-Type: application/json
 
 {
@@ -109,7 +109,7 @@ Content-Type: application/json
 ###
 # @name publish_invalid_missing_field
 # Validasi schema: event_id tidak ada → harus 422
-POST {{aggregator_url}}/publish
+POST http://localhost:8080/publish
 Content-Type: application/json
 
 {
@@ -138,7 +138,7 @@ Content-Type: application/json
 ###
 # @name publish_invalid_timestamp
 # Validasi schema: timestamp bukan ISO8601 → harus 422
-POST {{aggregator_url}}/publish
+POST http://localhost:8080/publish
 Content-Type: application/json
 
 {
@@ -168,7 +168,7 @@ Content-Type: application/json
 ###
 # @name get_events_by_topic
 # Ambil semua event yang sudah diproses untuk topic logs.auth
-GET {{aggregator_url}}/events?topic=logs.auth
+GET http://localhost:8080/events?topic=logs.auth
 
 {{
     const assert = require("assert");
@@ -193,7 +193,7 @@ GET {{aggregator_url}}/events?topic=logs.auth
 ###
 # @name get_events_unknown_topic
 # Topic yang belum punya event → count harus 0
-GET {{aggregator_url}}/events?topic=logs.unknown
+GET http://localhost:8080/events?topic=logs.unknown
 
 {{
     const assert = require("assert");
@@ -218,7 +218,7 @@ GET {{aggregator_url}}/events?topic=logs.unknown
 ###
 # @name get_stats
 # Cek statistik aggregator: received, unique_processed, duplicate_dropped
-GET {{aggregator_url}}/stats
+GET http://localhost:8080/stats
 
 {{
     const assert = require("assert");

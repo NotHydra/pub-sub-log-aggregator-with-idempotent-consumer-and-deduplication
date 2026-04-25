@@ -1,11 +1,11 @@
 # Publisher Service — http://localhost:8081
 # Endpoints: GET /status, POST /run
-# Run with: httpyac publisher.http --all --env local
+# Run with: httpyac publisher.http --all
 
 ###
 # @name get_publisher_status
 # Cek konfigurasi publisher: aggregator URL, event count, duplicate rate
-GET {{publisher_url}}/status
+GET http://localhost:8081/status
 
 {{
     const assert = require("assert");
@@ -33,7 +33,7 @@ GET {{publisher_url}}/status
 # Trigger generate + send events ke aggregator
 # 6000 events dengan 25% duplikat (configurable via env)
 # Catatan: request ini bisa memakan waktu beberapa detik
-POST {{publisher_url}}/run
+POST http://localhost:8081/run
 
 {{
     const assert = require("assert");
